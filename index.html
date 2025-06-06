@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shapes.Inc AI Chatbot</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="settings-panel">
+            <h2>Chat Settings</h2>
+            <div class="basic-settings">
+                <div class="api-version">
+                    <label>API Version:</label>
+                    <select id="apiVersion">
+                        <option value="v2" selected>V2 (With Custom Headers)</option>
+                        <option value="v1">V1 (Without Custom Headers)</option>
+                    </select>
+                </div>
+                <div class="username-settings">
+                    <label>Your Username (X-User-Id):</label>
+                    <input type="text" id="userId" placeholder="Enter username">
+                </div>
+                <div class="bot-settings">
+                    <label>Bot Shape:</label>
+                    <input type="text" id="shapeUsername" value="star-tr15">
+                </div>
+            </div>
+            <button id="showAdvanced">Show Advanced Settings</button>
+        </div>
+
+        <div class="advanced-settings hidden">
+            <h3>Advanced Settings</h3>
+            <div class="setting-group">
+                <label>Channel ID:</label>
+                <input type="text" id="channelId" readonly>
+                <button id="regenerateChannel">Regenerate</button>
+            </div>
+            <div class="setting-group">
+                <label>API Key:</label>
+                <input type="password" id="apiKey" value="HQUWJWT4072UVNCOGWYJ2HWPVL985JEEYZDNJ7CVH74">
+            </div>
+            <button id="saveSettings">Save Settings</button>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <div class="chat-tools">
+                    <button id="showCommands" title="Show Commands">Commands</button>
+                    <button id="uploadImage" title="Upload Image">Image</button>
+                    <button id="uploadAudio" title="Upload Audio">Audio</button>
+                </div>
+                <input type="text" id="messageInput" placeholder="Type your message...">
+                <button id="sendMessage">Send</button>
+            </div>
+        </div>
+
+        <div class="commands-panel hidden">
+            <h3>Available Commands</h3>
+            <ul>
+                <li><code>!reset</code> - Reset the Shape's long-term memory</li>
+                <li><code>!sleep</code> - Generate a long-term on demand</li>
+                <li><code>!dashboard</code> - Access the Shape's dashboard</li>
+                <li><code>!info</code> - Get information about the shape</li>
+                <li><code>!web</code> - Search the web</li>
+                <li><code>!help</code> - Get help with commands</li>
+                <li><code>!imagine</code> - Generate images</li>
+                <li><code>!wack</code> - Reset the Shape's short-term memory</li>
+            </ul>
+        </div>
+    </div>
+
+    <input type="file" id="imageUpload" accept="image/*" style="display: none">
+    <input type="file" id="audioUpload" accept=".mp3,.wav,.ogg" style="display: none">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
