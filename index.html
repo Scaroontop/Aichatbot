@@ -8,46 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="settings-panel">
-            <h2>Chat Settings</h2>
-            <div class="basic-settings">
-                <div class="api-version">
-                    <label>API Version:</label>
-                    <select id="apiVersion">
-                        <option value="v2" selected>V2 (With Custom Headers)</option>
-                        <option value="v1">V1 (Without Custom Headers)</option>
-                    </select>
-                </div>
-                <div class="username-settings">
-                    <label>Your Username (X-User-Id):</label>
-                    <input type="text" id="userId" placeholder="Enter username">
-                </div>
-                <div class="bot-settings">
-                    <label>Bot Shape:</label>
-                    <input type="text" id="shapeUsername" value="star-tr15">
-                </div>
-            </div>
-            <button id="saveBasicSettings">Save Settings</button>
-            <button id="showAdvanced">Show Advanced Settings</button>
-        </div>
-
-        <div class="advanced-settings hidden">
-            <h3>Advanced Settings</h3>
-            <div class="setting-group">
-                <label>Channel ID:</label>
-                <input type="text" id="channelId" readonly>
-                <div class="channel-buttons">
-                    <button id="regenerateChannel">Regenerate</button>
-                    <button id="customChannel">Custom Channel ID</button>
-                </div>
-            </div>
-            <div class="setting-group">
-                <label>API Key:</label>
-                <input type="password" id="apiKey" value="HQUWJWT4072UVNCOGWYJ2HWPVL985JEEYZDNJ7CVH74">
-            </div>
-            <button id="saveSettings">Save Settings</button>
-        </div>
-
+        <!-- Shape Profile Section -->
         <div class="shape-info-container">
             <div class="shape-profile">
                 <div class="shape-header">
@@ -100,6 +61,7 @@
             </div>
         </div>
 
+        <!-- Chat Section -->
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages"></div>
             <div class="typing-indicator hidden">
@@ -118,6 +80,7 @@
             </div>
         </div>
 
+        <!-- Commands Panel -->
         <div class="commands-panel hidden">
             <h3>Available Commands</h3>
             <ul>
@@ -131,8 +94,52 @@
                 <li><button class="command-btn" data-command="!wack">!wack</button> - Reset the Shape's short-term memory</li>
             </ul>
         </div>
+
+        <!-- Settings Section -->
+        <div class="settings-section">
+            <div class="settings-panel">
+                <h2>Chat Settings</h2>
+                <div class="basic-settings">
+                    <div class="api-version">
+                        <label>API Version:</label>
+                        <select id="apiVersion">
+                            <option value="v2" selected>V2 (With Custom Headers)</option>
+                            <option value="v1">V1 (Without Custom Headers)</option>
+                        </select>
+                    </div>
+                    <div class="username-settings">
+                        <label>Your Username (X-User-Id):</label>
+                        <input type="text" id="userId" placeholder="Enter username">
+                    </div>
+                    <div class="bot-settings">
+                        <label>Bot Shape:</label>
+                        <input type="text" id="shapeUsername" value="Star-tr15">
+                    </div>
+                </div>
+                <button id="saveBasicSettings">Save Settings</button>
+                <button id="showAdvanced">Show Advanced Settings</button>
+            </div>
+
+            <div class="advanced-settings hidden">
+                <h3>Advanced Settings</h3>
+                <div class="setting-group">
+                    <label>Channel ID:</label>
+                    <input type="text" id="channelId" readonly>
+                    <div class="channel-buttons">
+                        <button id="regenerateChannel">Regenerate</button>
+                        <button id="customChannel">Custom Channel ID</button>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>API Key:</label>
+                    <input type="password" id="apiKey" value="HQUWJWT4072UVNCOGWYJ2HWPVL985JEEYZDNJ7CVH74">
+                </div>
+                <button id="saveSettings">Save Settings</button>
+            </div>
+        </div>
     </div>
 
+    <!-- Hidden File Inputs -->
     <input type="file" id="imageUpload" accept="image/*" style="display: none">
     <input type="file" id="audioUpload" accept=".mp3,.wav,.ogg" style="display: none">
 
