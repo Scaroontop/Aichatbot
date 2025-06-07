@@ -8,41 +8,45 @@
 </head>
 <body>
     <div class="container">
-        <div class="settings-panel">
-            <h2>Chat Settings</h2>
-            <div class="basic-settings">
-                <div class="api-version">
-                    <label>API Version:</label>
-                    <select id="apiVersion">
-                        <option value="v2" selected>V2 (With Custom Headers)</option>
-                        <option value="v1">V1 (Without Custom Headers)</option>
-                    </select>
-                </div>
-                <div class="username-settings">
-                    <label>Your Username (X-User-Id):</label>
-                    <input type="text" id="userId" placeholder="Enter username">
-                </div>
-                <div class="bot-settings">
-                    <label>Bot Shape:</label>
-                    <input type="text" id="shapeUsername" value="star-tr15">
-                </div>
-            </div>
-            <button id="showAdvanced">Show Advanced Settings</button>
+<div class="settings-panel">
+    <h2>Chat Settings</h2>
+    <div class="basic-settings">
+        <div class="api-version">
+            <label>API Version:</label>
+            <select id="apiVersion">
+                <option value="v2" selected>V2 (With Custom Headers)</option>
+                <option value="v1">V1 (Without Custom Headers)</option>
+            </select>
         </div>
+        <div class="username-settings">
+            <label>Your Username (X-User-Id):</label>
+            <input type="text" id="userId" placeholder="Enter username">
+        </div>
+        <div class="bot-settings">
+            <label>Bot Shape:</label>
+            <input type="text" id="shapeUsername" value="star-tr15">
+        </div>
+    </div>
+    <button id="saveBasicSettings">Save Settings</button>
+    <button id="showAdvanced">Show Advanced Settings</button>
+</div>
 
         <div class="advanced-settings hidden">
-            <h3>Advanced Settings</h3>
-            <div class="setting-group">
-                <label>Channel ID:</label>
-                <input type="text" id="channelId" readonly>
-                <button id="regenerateChannel">Regenerate</button>
-            </div>
-            <div class="setting-group">
-                <label>API Key:</label>
-                <input type="password" id="apiKey" value="HQUWJWT4072UVNCOGWYJ2HWPVL985JEEYZDNJ7CVH74">
-            </div>
-            <button id="saveSettings">Save Settings</button>
+    <h3>Advanced Settings</h3>
+    <div class="setting-group">
+        <label>Channel ID:</label>
+        <input type="text" id="channelId" readonly>
+        <div class="channel-buttons">
+            <button id="regenerateChannel">Regenerate</button>
+            <button id="customChannel">Custom Channel ID</button>
         </div>
+    </div>
+    <div class="setting-group">
+        <label>API Key:</label>
+        <input type="password" id="apiKey" value="HQUWJWT4072UVNCOGWYJ2HWPVL985JEEYZDNJ7CVH74">
+    </div>
+    <button id="saveSettings">Save Settings</button>
+</div>
 
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages"></div>
@@ -58,18 +62,18 @@
         </div>
 
         <div class="commands-panel hidden">
-            <h3>Available Commands</h3>
-            <ul>
-                <li><code>!reset</code> - Reset the Shape's long-term memory</li>
-                <li><code>!sleep</code> - Generate a long-term on demand</li>
-                <li><code>!dashboard</code> - Access the Shape's dashboard</li>
-                <li><code>!info</code> - Get information about the shape</li>
-                <li><code>!web</code> - Search the web</li>
-                <li><code>!help</code> - Get help with commands</li>
-                <li><code>!imagine</code> - Generate images</li>
-                <li><code>!wack</code> - Reset the Shape's short-term memory</li>
-            </ul>
-        </div>
+    <h3>Available Commands</h3>
+    <ul>
+        <li><button class="command-btn" data-command="!reset">!reset</button> - Reset the Shape's long-term memory</li>
+        <li><button class="command-btn" data-command="!sleep">!sleep</button> - Generate a long-term on demand</li>
+        <li><button class="command-btn" data-command="!dashboard">!dashboard</button> - Access the Shape's dashboard</li>
+        <li><button class="command-btn" data-command="!info">!info</button> - Get information about the shape</li>
+        <li><button class="command-btn" data-command="!web">!web</button> - Search the web</li>
+        <li><button class="command-btn" data-command="!help">!help</button> - Get help with commands</li>
+        <li><button class="command-btn" data-command="!imagine">!imagine</button> - Generate images</li>
+        <li><button class="command-btn" data-command="!wack">!wack</button> - Reset the Shape's short-term memory</li>
+    </ul>
+</div>
     </div>
 
     <input type="file" id="imageUpload" accept="image/*" style="display: none">
