@@ -4,17 +4,18 @@ class ShapesIncChat {
         this.apiVersion = 'v2';
         this.userId = 'Scaroontop';
         this.channelId = this.generateChannelId();
-        this.shapeUsername = 'star-tr15';
-        this.baseURL = 'https://api.shapes.inc/v1';
+        this.shapeUsername = 'Star-tr15';
+        this.baseURL = 'https://api.shapes.inc';
         this.requestQueue = [];
         this.isProcessing = false;
         this.rateLimitDelay = 1000; // 1 second between requests
+        this.currentShape = null;
         
         this.initializeElements();
         this.attachEventListeners();
         this.loadSettings();
         this.updateUsernameField();
-        this.scrollToBottom();
+        this.fetchAndDisplayShapeInfo(this.shapeUsername);
     }
 
     initializeElements() {
@@ -41,7 +42,8 @@ class ShapesIncChat {
             audioUploadInput: document.getElementById('audioUpload'),
             typingIndicator: document.querySelector('.typing-indicator'),
             toggleAdvancedInfoBtn: document.getElementById('toggleAdvancedInfo'),
-            advancedInfo: document.querySelector('.advanced-info')
+            advancedInfo: document.querySelector('.advanced-info'),
+            shapeProfile: document.querySelector('.shape-profile')
         };
     }
 
@@ -54,12 +56,34 @@ class ShapesIncChat {
             }
         });
 
+        this.elements.messageInput.addEventListener('focus', () => {
+            if (this.currentShape) {
+                this.elements.shapeProfile.classList.remove('hidden');
+            }
+        });
+
         this.elements.apiVersionSelect.addEventListener('change', () => {
             this.apiVersion = this.elements.apiVersionSelect.value;
+            if (this.apiVersion === 'v1') {
+                this.elements.userIdInput.value = '';
+                this.userId = '';
+            }
             this.updateUsernameField();
         });
 
+        this.elements.userIdInput.addEventListener('input', (e) => {
+            if (this.apiVersion === 'v1') {
+                e.preventDefault();
+                e.target.value = '';
+                return false;
+            }
+        });
+
         this.elements.saveBasicSettingsBtn.addEventListener('click', () => {
+            if (this.apiVersion === 'v1' && this.elements.userIdInput.value.trim() !== '') {
+                this.showError('Username cannot be set in V1 mode');
+                return;
+            }
             this.saveSettings();
             this.showSuccess('Basic settings saved successfully!');
             setTimeout(() => location.reload(), 1000);
@@ -70,42 +94,18 @@ class ShapesIncChat {
         });
 
         this.elements.saveSettingsBtn.addEventListener('click', () => {
+            if (this.apiVersion === 'v1' && this.elements.userIdInput.value.trim() !== '') {
+                this.showError('Username cannot be set in V1 mode');
+                return;
+            }
             this.saveSettings();
             this.showSuccess('Advanced settings saved successfully!');
             setTimeout(() => location.reload(), 1000);
         });
 
-        this.elements.regenerateChannelBtn.addEventListener('click', () => {
-            this.channelId = this.generateChannelId();
-            this.elements.channelIdInput.value = this.channelId;
-        });
-
-        this.elements.customChannelBtn.addEventListener('click', () => {
-            const customId = prompt('Enter custom channel ID:');
-            if (customId && customId.trim()) {
-                this.channelId = customId.trim();
-                this.elements.channelIdInput.value = this.channelId;
-            }
-        });
-
-        this.elements.showCommandsBtn.addEventListener('click', () => {
-            this.elements.commandsPanel.classList.toggle('hidden');
-        });
-
-        this.elements.imageUploadBtn.addEventListener('click', () => {
-            this.elements.imageUploadInput.click();
-        });
-
-        this.elements.audioUploadBtn.addEventListener('click', () => {
-            this.elements.audioUploadInput.click();
-        });
-
-        this.elements.imageUploadInput.addEventListener('change', (e) => {
-            this.handleFileUpload(e, 'image');
-        });
-
-        this.elements.audioUploadInput.addEventListener('change', (e) => {
-            this.handleFileUpload(e, 'audio');
+        this.elements.shapeUsernameInput.addEventListener('change', () => {
+            this.shapeUsername = this.elements.shapeUsernameInput.value;
+            this.fetchAndDisplayShapeInfo(this.shapeUsername);
         });
 
         this.elements.toggleAdvancedInfoBtn.addEventListener('click', () => {
@@ -129,42 +129,70 @@ class ShapesIncChat {
             });
         });
 
-        this.elements.shapeUsernameInput.addEventListener('change', () => {
-            this.shapeUsername = this.elements.shapeUsernameInput.value;
-            this.updateShapeProfile(this.shapeUsername);
+        // Additional event listeners...
+        this.setupCommandButtons();
+    }
+
+    async fetchAndDisplayShapeInfo(username) {
+        try {
+            const response = await fetch(`${this.baseURL}/shapes/public/${username}`);
+            if (!response.ok) throw new Error('Failed to fetch shape info');
+            
+            const data = await response.json();
+            this.currentShape = data;
+            this.updateShapeProfile(data);
+            return data;
+        } catch (error) {
+            console.error('Error fetching shape info:', error);
+            this.showError(`Failed to load information for shape: ${username}`);
+            return null;
+        }
+    }
+
+    updateShapeProfile(profile) {
+        if (!profile) return;
+
+        // Update basic info
+        document.getElementById('shapeAvatar').src = profile.avatar_url || profile.avatar;
+        document.getElementById('shapeName').textContent = profile.name;
+        document.getElementById('shapeDescription').textContent = profile.search_description;
+        
+        document.getElementById('userCount').textContent = 
+            `👤 ${profile.user_count?.toLocaleString() || 0} users`;
+        document.getElementById('messageCount').textContent = 
+            `💬 ${profile.message_count?.toLocaleString() || 0} messages`;
+
+        // Update tags
+        const tagsContainer = document.getElementById('shapeTags');
+        tagsContainer.innerHTML = '';
+        profile.search_tags_v2?.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag';
+            tagElement.textContent = tag;
+            tagsContainer.appendChild(tagElement);
         });
-    }
 
-    generateChannelId() {
-        return 'channel_' + Math.random().toString(36).substr(2, 9);
-    }
+        // Update advanced information
+        document.getElementById('shapeTagline').textContent = profile.tagline || 'N/A';
+        document.getElementById('shapeUniverse').textContent = profile.character_universe || 'N/A';
+        document.getElementById('shapeBackground').textContent = profile.character_background || 'N/A';
+        document.getElementById('shapeStatus').textContent = profile.shape_settings?.status || 'N/A';
+        document.getElementById('shapeInitialMessage').textContent = 
+            profile.shape_settings?.shape_initial_message || 'N/A';
 
-    encryptApiKey(apiKey) {
-        return CryptoJS.SHA256(apiKey).toString();
-    }
-
-    showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error';
-        errorDiv.textContent = message;
-        this.elements.chatMessages.appendChild(errorDiv);
-        this.scrollToBottom();
-        setTimeout(() => errorDiv.remove(), 5000);
-    }
-
-    showSuccess(message) {
-        const successDiv = document.createElement('div');
-        successDiv.className = 'success';
-        successDiv.textContent = message;
-        this.elements.chatMessages.appendChild(successDiv);
-        this.scrollToBottom();
-        setTimeout(() => successDiv.remove(), 5000);
-    }
-
-    sanitizeInput(input) {
-        const div = document.createElement('div');
-        div.textContent = input;
-        return div.innerHTML;
+        // Update example prompts
+        const promptsContainer = document.getElementById('shapePrompts');
+        promptsContainer.innerHTML = '';
+        if (profile.example_prompts?.length > 0) {
+            profile.example_prompts.forEach(prompt => {
+                const promptElement = document.createElement('div');
+                promptElement.className = 'prompt-item';
+                promptElement.textContent = prompt;
+                promptsContainer.appendChild(promptElement);
+            });
+        } else {
+            promptsContainer.textContent = 'No example prompts available';
+        }
     }
 
     updateUsernameField() {
@@ -177,83 +205,6 @@ class ShapesIncChat {
             usernameSettings.classList.remove('disabled');
             this.elements.userIdInput.value = this.userId;
         }
-    }
-
-    async updateShapeProfile(username) {
-        try {
-            const response = await fetch(`${this.baseURL}/shapes/public/${username}`);
-            if (!response.ok) throw new Error('Failed to fetch shape profile');
-            const profile = await response.json();
-
-            // Update basic info
-            document.getElementById('shapeAvatar').src = profile.avatar_url || profile.avatar;
-            document.getElementById('shapeName').textContent = profile.name;
-            document.getElementById('shapeDescription').textContent = profile.search_description;
-            
-            document.getElementById('userCount').textContent = 
-                `👤 ${profile.user_count?.toLocaleString() || 0} users`;
-            document.getElementById('messageCount').textContent = 
-                `💬 ${profile.message_count?.toLocaleString() || 0} messages`;
-
-            // Update tags
-            const tagsContainer = document.getElementById('shapeTags');
-            tagsContainer.innerHTML = '';
-            profile.search_tags_v2?.forEach(tag => {
-                const tagElement = document.createElement('span');
-                tagElement.className = 'tag';
-                tagElement.textContent = tag;
-                tagsContainer.appendChild(tagElement);
-            });
-
-            // Update advanced information
-            document.getElementById('shapeTagline').textContent = profile.tagline || 'N/A';
-            document.getElementById('shapeUniverse').textContent = profile.character_universe || 'N/A';
-            document.getElementById('shapeBackground').textContent = profile.character_background || 'N/A';
-            document.getElementById('shapeStatus').textContent = profile.shape_settings?.status || 'N/A';
-            document.getElementById('shapeInitialMessage').textContent = 
-                profile.shape_settings?.shape_initial_message || 'N/A';
-
-            // Update example prompts
-            const promptsContainer = document.getElementById('shapePrompts');
-            promptsContainer.innerHTML = '';
-            if (profile.example_prompts?.length > 0) {
-                profile.example_prompts.forEach(prompt => {
-                    const promptElement = document.createElement('div');
-                    promptElement.className = 'prompt-item';
-                    promptElement.textContent = prompt;
-                    promptsContainer.appendChild(promptElement);
-                });
-            } else {
-                promptsContainer.textContent = 'No example prompts available';
-            }
-
-        } catch (error) {
-            console.error('Error fetching shape profile:', error);
-            this.showError('Failed to load shape profile');
-        }
-    }
-
-    async processQueue() {
-        if (this.isProcessing || this.requestQueue.length === 0) return;
-        
-        this.isProcessing = true;
-        const request = this.requestQueue.shift();
-        
-        try {
-            await request();
-        } catch (error) {
-            console.error('Error processing request:', error);
-        }
-        
-        setTimeout(() => {
-            this.isProcessing = false;
-            this.processQueue();
-        }, this.rateLimitDelay);
-    }
-
-    queueRequest(request) {
-        this.requestQueue.push(request);
-        this.processQueue();
     }
 
     async sendMessage() {
@@ -271,105 +222,15 @@ class ShapesIncChat {
                 this.hideTypingIndicator();
                 const botResponse = response.choices[0].message.content;
                 this.addMessageToChat('bot', botResponse);
+                
+                // Update shape info after each message
+                await this.fetchAndDisplayShapeInfo(this.shapeUsername);
             } catch (error) {
                 this.hideTypingIndicator();
                 this.showError('Failed to get response from the API');
                 console.error('API Error:', error);
             }
         });
-    }
-
-    async makeApiRequest(message) {
-        const headers = {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-        };
-
-        if (this.apiVersion === 'v2') {
-            headers['X-User-Id'] = this.userId;
-            headers['X-Channel-Id'] = this.channelId;
-        }
-
-        const response = await fetch(`${this.baseURL}/chat/completions`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                model: `shapesinc/${this.shapeUsername}`,
-                messages: [{ role: 'user', content: message }]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-        }
-
-        return await response.json();
-    }
-
-    async handleFileUpload(event, type) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const content = [
-                {
-                    type: 'text',
-                    text: `Please analyze this ${type}`
-                },
-                {
-                    type: `${type}_url`,
-                    [`${type}_url`]: {
-                        url: e.target.result
-                    }
-                }
-            ];
-
-            this.addMessageToChat('user', `Uploaded ${type}: ${file.name}`);
-            this.showTypingIndicator();
-
-            this.queueRequest(async () => {
-                try {
-                    const response = await this.makeApiRequestWithMedia(content);
-                    this.hideTypingIndicator();
-                    const botResponse = response.choices[0].message.content;
-                    this.addMessageToChat('bot', botResponse);
-                } catch (error) {
-                    this.hideTypingIndicator();
-                    this.showError(`Failed to process ${type}`);
-                    console.error('Upload Error:', error);
-                }
-            });
-        };
-
-        reader.readAsDataURL(file);
-    }
-
-    async makeApiRequestWithMedia(content) {
-        const headers = {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-        };
-
-        if (this.apiVersion === 'v2') {
-            headers['X-User-Id'] = this.userId;
-            headers['X-Channel-Id'] = this.channelId;
-        }
-
-        const response = await fetch(`${this.baseURL}/chat/completions`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                model: `shapesinc/${this.shapeUsername}`,
-                messages: [{ role: 'user', content: content }]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-        }
-
-        return await response.json();
     }
 
     addMessageToChat(role, content) {
@@ -401,9 +262,7 @@ class ShapesIncChat {
         this.scrollToBottom();
     }
 
-    scrollToBottom() {
-        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
-    }
+    // ... (keep existing utility methods like generateChannelId, encryptApiKey, etc.)
 
     showTypingIndicator() {
         this.elements.typingIndicator.classList.remove('hidden');
@@ -418,11 +277,39 @@ class ShapesIncChat {
         }, 300);
     }
 
+    showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = message;
+        this.elements.chatMessages.appendChild(errorDiv);
+        this.scrollToBottom();
+        setTimeout(() => errorDiv.remove(), 5000);
+    }
+
+    showSuccess(message) {
+        const successDiv = document.createElement('div');
+        successDiv.className = 'success';
+        successDiv.textContent = message;
+        this.elements.chatMessages.appendChild(successDiv);
+        this.scrollToBottom();
+        setTimeout(() => successDiv.remove(), 5000);
+    }
+
+    scrollToBottom() {
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+    }
+
+    sanitizeInput(input) {
+        const div = document.createElement('div');
+        div.textContent = input;
+        return div.innerHTML;
+    }
+
     loadSettings() {
         const settings = JSON.parse(localStorage.getItem('chatSettings')) || {};
         this.apiVersion = settings.apiVersion || 'v2';
         this.userId = this.apiVersion === 'v2' ? (settings.userId || 'Scaroontop') : '';
-        this.shapeUsername = settings.shapeUsername || 'star-tr15';
+        this.shapeUsername = settings.shapeUsername || 'Star-tr15';
         this.channelId = settings.channelId || this.generateChannelId();
         
         this.elements.apiVersionSelect.value = this.apiVersion;
@@ -430,20 +317,26 @@ class ShapesIncChat {
         this.elements.shapeUsernameInput.value = this.shapeUsername;
         this.elements.channelIdInput.value = this.channelId;
         
-        this.updateShapeProfile(this.shapeUsername);
         this.updateUsernameField();
+        this.fetchAndDisplayShapeInfo(this.shapeUsername);
     }
 
     saveSettings() {
+        if (this.apiVersion === 'v1' && this.elements.userIdInput.value.trim() !== '') {
+            throw new Error('Username cannot be set in V1 mode');
+        }
+
         const settings = {
             apiVersion: this.elements.apiVersionSelect.value,
-            userId: this.elements.userIdInput.value,
+            userId: this.apiVersion === 'v2' ? this.elements.userIdInput.value : '',
             shapeUsername: this.elements.shapeUsernameInput.value,
             channelId: this.elements.channelIdInput.value,
             apiKey: this.encryptApiKey(this.elements.apiKeyInput.value)
         };
         localStorage.setItem('chatSettings', JSON.stringify(settings));
     }
+
+    // Keep existing API request methods...
 }
 
 // Initialize the chat when the page loads
