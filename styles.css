@@ -141,3 +141,33 @@ button:hover {
     border: 1px solid var(--border-color);
     border-radius: 5px;
 }
+.command-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-color);
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.command-btn:hover {
+    background: none;
+    color: #2980b9;
+}
+
+.channel-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.username-settings.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+#saveBasicSettings {
+    margin: 15px 0;
+    width: 100%;
+}
