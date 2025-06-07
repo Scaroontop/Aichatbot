@@ -48,20 +48,55 @@
             <button id="saveSettings">Save Settings</button>
         </div>
 
-        <div class="shape-profile">
-            <div class="shape-header">
-                <img id="shapeAvatar" src="" alt="Shape Avatar" class="shape-avatar">
-                <div class="shape-info">
-                    <h2 id="shapeName"></h2>
-                    <p id="shapeDescription"></p>
+        <div class="shape-info-container">
+            <div class="shape-profile">
+                <div class="shape-header">
+                    <img id="shapeAvatar" src="" alt="Shape Avatar" class="shape-avatar">
+                    <div class="shape-info">
+                        <h2 id="shapeName"></h2>
+                        <p id="shapeDescription"></p>
+                    </div>
                 </div>
-            </div>
-            <div class="shape-details">
-                <div id="shapeStats">
-                    <span id="userCount"></span>
-                    <span id="messageCount"></span>
+                <div class="shape-details">
+                    <div id="shapeStats">
+                        <span id="userCount"></span>
+                        <span id="messageCount"></span>
+                    </div>
+                    <div id="shapeTags"></div>
                 </div>
-                <div id="shapeTags"></div>
+                <button id="toggleAdvancedInfo" class="toggle-info-btn">Show Advanced Information</button>
+                <div class="advanced-info hidden">
+                    <div class="info-section">
+                        <h3>Additional Details</h3>
+                        <div class="info-item">
+                            <span class="info-label">Tagline:</span>
+                            <span id="shapeTagline"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Universe:</span>
+                            <span id="shapeUniverse"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Background:</span>
+                            <span id="shapeBackground"></span>
+                        </div>
+                    </div>
+                    <div class="info-section">
+                        <h3>Shape Settings</h3>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span id="shapeStatus"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Initial Message:</span>
+                            <span id="shapeInitialMessage"></span>
+                        </div>
+                    </div>
+                    <div class="info-section">
+                        <h3>Example Prompts</h3>
+                        <div id="shapePrompts" class="prompts-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
