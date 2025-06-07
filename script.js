@@ -14,6 +14,7 @@ class ShapesIncChat {
         this.attachEventListeners();
         this.loadSettings();
         this.updateUsernameField();
+        this.scrollToBottom();
     }
 
     initializeElements() {
@@ -38,7 +39,9 @@ class ShapesIncChat {
             audioUploadBtn: document.getElementById('uploadAudio'),
             imageUploadInput: document.getElementById('imageUpload'),
             audioUploadInput: document.getElementById('audioUpload'),
-            typingIndicator: document.querySelector('.typing-indicator')
+            typingIndicator: document.querySelector('.typing-indicator'),
+            toggleAdvancedInfoBtn: document.getElementById('toggleAdvancedInfo'),
+            advancedInfo: document.querySelector('.advanced-info')
         };
     }
 
@@ -105,7 +108,26 @@ class ShapesIncChat {
             this.handleFileUpload(e, 'audio');
         });
 
-        this.setupCommandButtons();
+        this.elements.toggleAdvancedInfoBtn.addEventListener('click', () => {
+            const isHidden = this.elements.advancedInfo.classList.contains('hidden');
+            this.elements.advancedInfo.classList.toggle('hidden');
+            this.elements.toggleAdvancedInfoBtn.textContent = 
+                isHidden ? 'Hide Advanced Information' : 'Show Advanced Information';
+        });
+
+        document.querySelectorAll('.command-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const command = btn.getAttribute('data-command');
+                if (command === '!imagine') {
+                    this.elements.messageInput.value = command + ' ';
+                    this.elements.messageInput.focus();
+                } else {
+                    this.elements.messageInput.value = command;
+                    this.sendMessage();
+                }
+                this.elements.commandsPanel.classList.add('hidden');
+            });
+        });
 
         this.elements.shapeUsernameInput.addEventListener('change', () => {
             this.shapeUsername = this.elements.shapeUsernameInput.value;
@@ -126,6 +148,7 @@ class ShapesIncChat {
         errorDiv.className = 'error';
         errorDiv.textContent = message;
         this.elements.chatMessages.appendChild(errorDiv);
+        this.scrollToBottom();
         setTimeout(() => errorDiv.remove(), 5000);
     }
 
@@ -134,6 +157,7 @@ class ShapesIncChat {
         successDiv.className = 'success';
         successDiv.textContent = message;
         this.elements.chatMessages.appendChild(successDiv);
+        this.scrollToBottom();
         setTimeout(() => successDiv.remove(), 5000);
     }
 
@@ -155,57 +179,58 @@ class ShapesIncChat {
         }
     }
 
-    async fetchShapeProfile(username) {
+    async updateShapeProfile(username) {
         try {
             const response = await fetch(`${this.baseURL}/shapes/public/${username}`);
             if (!response.ok) throw new Error('Failed to fetch shape profile');
-            return await response.json();
+            const profile = await response.json();
+
+            // Update basic info
+            document.getElementById('shapeAvatar').src = profile.avatar_url || profile.avatar;
+            document.getElementById('shapeName').textContent = profile.name;
+            document.getElementById('shapeDescription').textContent = profile.search_description;
+            
+            document.getElementById('userCount').textContent = 
+                `👤 ${profile.user_count?.toLocaleString() || 0} users`;
+            document.getElementById('messageCount').textContent = 
+                `💬 ${profile.message_count?.toLocaleString() || 0} messages`;
+
+            // Update tags
+            const tagsContainer = document.getElementById('shapeTags');
+            tagsContainer.innerHTML = '';
+            profile.search_tags_v2?.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                tagElement.textContent = tag;
+                tagsContainer.appendChild(tagElement);
+            });
+
+            // Update advanced information
+            document.getElementById('shapeTagline').textContent = profile.tagline || 'N/A';
+            document.getElementById('shapeUniverse').textContent = profile.character_universe || 'N/A';
+            document.getElementById('shapeBackground').textContent = profile.character_background || 'N/A';
+            document.getElementById('shapeStatus').textContent = profile.shape_settings?.status || 'N/A';
+            document.getElementById('shapeInitialMessage').textContent = 
+                profile.shape_settings?.shape_initial_message || 'N/A';
+
+            // Update example prompts
+            const promptsContainer = document.getElementById('shapePrompts');
+            promptsContainer.innerHTML = '';
+            if (profile.example_prompts?.length > 0) {
+                profile.example_prompts.forEach(prompt => {
+                    const promptElement = document.createElement('div');
+                    promptElement.className = 'prompt-item';
+                    promptElement.textContent = prompt;
+                    promptsContainer.appendChild(promptElement);
+                });
+            } else {
+                promptsContainer.textContent = 'No example prompts available';
+            }
+
         } catch (error) {
             console.error('Error fetching shape profile:', error);
             this.showError('Failed to load shape profile');
-            return null;
         }
-    }
-
-    async updateShapeProfile(username) {
-        const profile = await this.fetchShapeProfile(username);
-        if (!profile) return;
-
-        document.getElementById('shapeAvatar').src = profile.avatar_url || profile.avatar;
-        document.getElementById('shapeName').textContent = profile.name;
-        document.getElementById('shapeDescription').textContent = profile.search_description;
-        
-        document.getElementById('userCount').textContent = 
-            `👤 ${profile.user_count?.toLocaleString() || 0} users`;
-        document.getElementById('messageCount').textContent = 
-            `💬 ${profile.message_count?.toLocaleString() || 0} messages`;
-        
-        const tagsContainer = document.getElementById('shapeTags');
-        tagsContainer.innerHTML = '';
-        profile.search_tags_v2?.forEach(tag => {
-            const tagElement = document.createElement('span');
-            tagElement.className = 'tag';
-            tagElement.textContent = tag;
-            tagsContainer.appendChild(tagElement);
-        });
-    }
-
-    setupCommandButtons() {
-        document.querySelectorAll('.command-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const command = btn.getAttribute('data-command');
-                this.elements.messageInput.value = command;
-                this.sendMessage();
-            });
-        });
-    }
-
-    showTypingIndicator() {
-        this.elements.typingIndicator.classList.remove('hidden');
-    }
-
-    hideTypingIndicator() {
-        this.elements.typingIndicator.classList.add('hidden');
     }
 
     async processQueue() {
@@ -285,11 +310,8 @@ class ShapesIncChat {
         const file = event.target.files[0];
         if (!file) return;
 
-        try {
-            // In a real implementation, you would upload the file to a server
-            // and get back a URL. For this example, we'll simulate it:
-            const fakeUrl = `https://example.com/${file.name}`;
-            
+        const reader = new FileReader();
+        reader.onload = async (e) => {
             const content = [
                 {
                     type: 'text',
@@ -298,7 +320,7 @@ class ShapesIncChat {
                 {
                     type: `${type}_url`,
                     [`${type}_url`]: {
-                        url: fakeUrl
+                        url: e.target.result
                     }
                 }
             ];
@@ -318,10 +340,9 @@ class ShapesIncChat {
                     console.error('Upload Error:', error);
                 }
             });
-        } catch (error) {
-            this.showError(`Failed to upload ${type}`);
-            console.error('Upload Error:', error);
-        }
+        };
+
+        reader.readAsDataURL(file);
     }
 
     async makeApiRequestWithMedia(content) {
@@ -351,6 +372,52 @@ class ShapesIncChat {
         return await response.json();
     }
 
+    addMessageToChat(role, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}-message`;
+
+        // Check if content contains an image URL
+        const imageUrlRegex = /https:\/\/files\.shapes\.inc\/.*\.(png|jpg|jpeg|gif)/i;
+        const imageUrl = content.match(imageUrlRegex);
+
+        if (imageUrl) {
+            // If there's text before or after the image URL, add it
+            const textContent = content.replace(imageUrl[0], '').trim();
+            if (textContent) {
+                messageDiv.textContent = textContent;
+            }
+
+            // Add the image
+            const img = document.createElement('img');
+            img.src = imageUrl[0];
+            img.alt = 'Shape generated image';
+            img.loading = 'lazy';
+            messageDiv.appendChild(img);
+        } else {
+            messageDiv.textContent = content;
+        }
+
+        this.elements.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+
+    scrollToBottom() {
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+    }
+
+    showTypingIndicator() {
+        this.elements.typingIndicator.classList.remove('hidden');
+        this.elements.typingIndicator.classList.add('visible');
+        this.scrollToBottom();
+    }
+
+    hideTypingIndicator() {
+        this.elements.typingIndicator.classList.remove('visible');
+        setTimeout(() => {
+            this.elements.typingIndicator.classList.add('hidden');
+        }, 300);
+    }
+
     loadSettings() {
         const settings = JSON.parse(localStorage.getItem('chatSettings')) || {};
         this.apiVersion = settings.apiVersion || 'v2';
@@ -376,14 +443,6 @@ class ShapesIncChat {
             apiKey: this.encryptApiKey(this.elements.apiKeyInput.value)
         };
         localStorage.setItem('chatSettings', JSON.stringify(settings));
-    }
-
-    addMessageToChat(role, content) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${role}-message`;
-        messageDiv.textContent = content;
-        this.elements.chatMessages.appendChild(messageDiv);
-        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
     }
 }
 
