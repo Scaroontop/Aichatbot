@@ -1,16 +1,39 @@
 class ShapesIncChat {
-    constructor() {
-        this.apiKey = 'HQUWJWT4072UVNCOGWYJ2HWPVL985JEEYZDNJ7CVH74';
-        this.apiVersion = 'v2';
+constructor() {
+    this.apiKey = 'HQUWJWT4072UVNCOGWYJ2HWPVL985JEEYZDNJ7CVH74';
+    this.apiVersion = 'v2';
+    this.userId = 'Scaroontop'; // Set default username to current user
+    this.channelId = this.generateChannelId();
+    this.shapeUsername = 'star-tr15';
+    this.baseURL = 'https://api.shapes.inc/v1';
+    
+    this.initializeElements();
+    this.attachEventListeners();
+    this.loadSettings();
+    this.updateUsernameField();
+}
+
+    updateUsernameField() {
+    const usernameSettings = this.elements.userIdInput.parentElement;
+    if (this.apiVersion === 'v1') {
+        usernameSettings.classList.add('disabled');
+        this.elements.userIdInput.value = '';
         this.userId = '';
-        this.channelId = this.generateChannelId();
-        this.shapeUsername = 'star-tr15';
-        this.baseURL = 'https://api.shapes.inc/v1';
-        
-        this.initializeElements();
-        this.attachEventListeners();
-        this.loadSettings();
+    } else {
+        usernameSettings.classList.remove('disabled');
+        this.elements.userIdInput.value = this.userId;
     }
+}
+
+setupCommandButtons() {
+    document.querySelectorAll('.command-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const command = btn.getAttribute('data-command');
+            this.elements.messageInput.value = command;
+            this.sendMessage();
+        });
+    });
+}
 
     initializeElements() {
         // Initialize all DOM elements
@@ -31,6 +54,8 @@ class ShapesIncChat {
             commandsPanel: document.querySelector('.commands-panel'),
             imageUploadBtn: document.getElementById('uploadImage'),
             audioUploadBtn: document.getElementById('uploadAudio'),
+            saveBasicSettingsBtn: document.getElementById('saveBasicSettings'),
+            customChannelBtn: document.getElementById('customChannel'),
             imageUploadInput: document.getElementById('imageUpload'),
             audioUploadInput: document.getElementById('audioUpload')
         };
@@ -73,6 +98,27 @@ class ShapesIncChat {
             this.handleFileUpload(e, 'image');
         });
 
+            this.elements.apiVersionSelect.addEventListener('change', () => {
+        this.apiVersion = this.elements.apiVersionSelect.value;
+        this.updateUsernameField();
+    });
+
+    this.elements.saveBasicSettingsBtn.addEventListener('click', () => {
+        this.saveSettings();
+        location.reload();
+    });
+
+    this.elements.customChannelBtn.addEventListener('click', () => {
+        const customId = prompt('Enter custom channel ID:');
+        if (customId && customId.trim()) {
+            this.channelId = customId.trim();
+            this.elements.channelIdInput.value = this.channelId;
+        }
+    });
+
+            this.setupCommandButtons();
+
+
         this.elements.audioUploadInput.addEventListener('change', (e) => {
             this.handleFileUpload(e, 'audio');
         });
@@ -86,21 +132,20 @@ class ShapesIncChat {
         return CryptoJS.SHA256(apiKey).toString();
     }
 
-    loadSettings() {
-        // Load settings from localStorage
-        const settings = JSON.parse(localStorage.getItem('chatSettings')) || {};
-        this.apiVersion = settings.apiVersion || 'v2';
-        this.userId = settings.userId || '';
-        this.shapeUsername = settings.shapeUsername || 'star-tr15';
-        this.channelId = settings.channelId || this.generateChannelId();
-        
-        // Update UI
-        this.elements.apiVersionSelect.value = this.apiVersion;
-        this.elements.userIdInput.value = this.userId;
-        this.elements.shapeUsernameInput.value = this.shapeUsername;
-        this.elements.channelIdInput.value = this.channelId;
-    }
-
+loadSettings() {
+    const settings = JSON.parse(localStorage.getItem('chatSettings')) || {};
+    this.apiVersion = settings.apiVersion || 'v2';
+    this.userId = this.apiVersion === 'v2' ? (settings.userId || 'Scaroontop') : '';
+    this.shapeUsername = settings.shapeUsername || 'star-tr15';
+    this.channelId = settings.channelId || this.generateChannelId();
+    
+    // Update UI
+    this.elements.apiVersionSelect.value = this.apiVersion;
+    this.elements.userIdInput.value = this.userId;
+    this.elements.shapeUsernameInput.value = this.shapeUsername;
+    this.elements.channelIdInput.value = this.channelId;
+    this.updateUsernameField();
+}
     saveSettings() {
         const settings = {
             apiVersion: this.elements.apiVersionSelect.value,
